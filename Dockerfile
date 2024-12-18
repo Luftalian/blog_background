@@ -26,9 +26,9 @@ WORKDIR /app
 COPY --from=builder /app/main /app/main
 COPY fonts /app/fonts
 
-RUN mkdir -p /uploads/images
+COPY uploads/images/d2f9e27e-aff4-4ce2-ba22-7fd1e614c4f6_thumb.png /uploads/images/d2f9e27e-aff4-4ce2-ba22-7fd1e614c4f6_thumb.png
 
-RUN mkdir /rss
+COPY rss/rss.xml /rss/rss.xml
 
 USER root
 
