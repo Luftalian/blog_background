@@ -2,32 +2,34 @@ FROM golang:latest as builder
 
 WORKDIR /app
 
-ENV CGO_ENABLED=0 \
-    GOOS=linux \
-    GOARCH=amd64 \
-    GOCACHE=/root/.cache/go-build \
-    GOMODCACHE=/go/pkg/mod
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+ENV GOARCH=amd64
+ENV GOCACHE=/root/.cache/go-build
+ENV GOMODCACHE=/go/pkg/mod
 
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=${GOCACHE} \
+    --mount=type=cache,target=${GOMODCACHE} \
+    go mod download
 
 COPY . .
 
-RUN go build -o /app/main
+RUN --mount=type=cache,target=${GOCACHE} \
+    --mount=type=cache,target=${GOMODCACHE} \
+    go build -o /app/main
 
-FROM alpine:latest
+FROM gcr.io/distroless/static-debian11:latest
 
 WORKDIR /app
 
 COPY --from=builder /app/main /app/main
-RUN ls -l
 COPY fonts /app/fonts
 
-# 必要なディレクトリを作成
-RUN mkdir -p /uploads/images \
-    && mkdir -p /rss
+RUN mkdir -p /uploads/images
 
-# 必要に応じて権限を設定
-# USER root
+RUN mkdir /rss
+
+USER root
 
 CMD ["/app/main"]
