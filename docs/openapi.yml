@@ -1,0 +1,838 @@
+openapi: 3.0.0
+info:
+  title: Blog API
+  description: API for a blogging platform.
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: http://localhost:8080/v1
+    description: Development server
+paths:
+  /articles:
+    get:
+      summary: Get a list of articles
+      description: Fetch a paginated list of articles for the home page or filtered by
+        query parameters.
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: category
+          in: query
+          description: Filter articles by category
+          required: false
+          schema:
+            type: string
+        - name: tag
+          in: query
+          description: Filter articles by tag
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: Search for articles by title or content
+          required: false
+          schema:
+            type: string
+        - name: orderby
+          in: query
+          description: Sort articles by created_at or view count (default created_at)
+          required: false
+          schema:
+            type: string
+            enum:
+              - created_at
+              - view_count
+            default: created_at
+        - name: order
+          in: query
+          description: Sort articles by created_at or view count in ascending or descending order (default created_at desc)
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+      responses:
+        '200':
+          description: A paginated list of articles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleResponse'
+        '400':
+          description: Invalid request parameters
+    post:
+      summary: Create a new article
+      description: Allows an authenticated user to create a new article.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewArticle'
+      responses:
+        '201':
+          description: Article successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleByAuthor'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+  /articles/{id}:
+    get:
+      summary: Get article details
+      description: Fetch details of a specific article by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the article to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Article details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+        '404':
+          description: Article not found
+    patch:
+      summary: Update an article
+      description: Allows an authenticated user to update an article.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the article to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateArticle'
+      responses:
+        '200':
+          description: Article successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+    delete:
+      summary: Delete an article
+      description: Allows an authenticated user to delete an article.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the article to delete
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Article successfully deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Article not found
+  /articles/author/{authorId}:
+    get:
+      summary: Get articles by author
+      description: Fetch articles written by a specific author.
+      parameters:
+        - name: authorId
+          in: path
+          required: true
+          description: ID of the author
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Article'
+        '404':
+          description: Author not found
+  /comments:
+    post:
+      summary: Post a comment
+      description: Allows users to post a comment on an article.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewComment'
+      responses:
+        '201':
+          description: Comment successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Bad request
+    get:
+      summary: Get comments for an article
+      description: Retrieve all comments for a specific article.
+      parameters:
+        - name: articleId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+  /comments/{id}:
+    delete:
+      summary: Delete a comment
+      description: Allows an authenticated user to delete a comment.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Comment successfully deleted
+    patch:
+      summary: Edit a comment
+      description: Allows an authenticated user to edit a comment.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateComment'
+      responses:
+        '200':
+          description: Comment successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+  /likes:
+    get:
+      summary: Get likes for an article
+      description: Retrieve the number of likes for a specific article.
+      parameters:
+        - name: articleId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Number of likes and whether user has liked the article
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeReturn'
+    post:
+      summary: Add a like to an article
+      description: Allows a user to like an article.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LikeRequest'
+      responses:
+        '200':
+          description: Like successfully added
+  /tags:
+    get:
+      summary: Get a list of tags
+      description: Fetch a list of all available tags.
+      responses:
+        '200':
+          description: A list of tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+    post:
+      summary: Create a new tag
+      description: Allows an authenticated user to create a new tag.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tag'
+      responses:
+        '201':
+          description: Tag successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+  /tags/{articleId}:
+    post:
+      summary: Add tags to an article
+      description: Allows an authenticated user to add tags to an article.
+      parameters:
+        - name: articleId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+      responses:
+        '200':
+          description: Tags successfully added
+  /categories:
+    get:
+      summary: Get a list of categories
+      description: Fetch a list of all available categories.
+      responses:
+        '200':
+          description: A list of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+    post:
+      summary: Create a new category
+      description: Allows an authenticated user to create a new category.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+      responses:
+        '201':
+          description: Category successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+  /auth/register:
+    post:
+      summary: Register a new user
+      description: Register a new user to the platform.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUser'
+      responses:
+        '201':
+          description: User successfully registered
+  /auth/login:
+    post:
+      summary: Login
+      description: Authenticate a user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: User successfully logged in
+  /auth/logout:
+    post:
+      summary: Logout
+      description: Logs out the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User successfully logged out
+  /articles/archive:
+    get:
+      summary: Get archive of articles
+      description: Retrieve articles grouped by month and year for the archive page.
+      responses:
+        '200':
+          description: A grouped archive of articles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchiveResponse'
+        '400':
+          description: Invalid request
+  /profile:
+    get:
+      summary: Get profile information
+      description: Retrieve profile information for the "About Me" page.
+      responses:
+        '200':
+          description: Profile information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '400':
+          description: Invalid request
+  /contact:
+    post:
+      summary: Submit a contact message
+      description: Send a message via the contact form.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactRequest'
+      responses:
+        '200':
+          description: Contact message successfully submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactResponse'
+        '400':
+          description: Invalid request
+  /rss:
+    get:
+      summary: Get RSS feed
+      description: Retrieve the RSS feed of the latest articles.
+      responses:
+        '200':
+          description: RSS feed retrieved
+          content:
+            application/rss+xml:
+              schema:
+                $ref: '#/components/schemas/RSSFeed'
+        '400':
+          description: Invalid request
+  /images/upload:
+    post:
+      summary: Upload an image
+      description: |
+        ユーザーがアップロードした画像を受け取り、サーバーに保存し、画像のURLを返します。
+        - **ファイルストレージ**: 画像はサーバーのファイルシステムに保存されます。
+        - **セキュリティ**: 画像のファイルタイプとサイズを検証します。
+        - **認証**: このエンドポイントは認証ユーザーのみがアクセスできます。
+      operationId: uploadImage
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImageUploadRequest'
+      responses:
+        '200':
+          description: 画像が正常にアップロードされた場合のレスポンス
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageUploadResponse'
+        '400':
+          description: 不正なリクエスト
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 認証が必要な場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: サーバー内部エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Article:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        image_url:
+          type: string
+        view_count:
+          type: integer
+        author:
+          type: string
+        author_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        category:
+          $ref: '#/components/schemas/Category'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        like_count:
+          type: integer
+    ArticleResponse:
+      type: object
+      properties:
+        articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Article'
+        condition:
+          type: object
+          properties:
+            category:
+              type: string
+            tag:
+              type: string
+            search:
+              type: string
+            orderby:
+              type: string
+            order:
+              type: string
+    ArticleByAuthor:
+      type: object
+      properties:
+        author:
+          type: string
+        author_id:
+          type: string
+        articles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Article'
+    NewArticle:
+      type: object
+      required:
+        - title
+        - author
+        - is_admin
+        - content
+        - category
+      properties:
+        title:
+          type: string
+        author_id:
+          type: string
+        author:
+          type: string
+        is_admin:
+          type: boolean
+        content:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+    UpdateArticle:
+      type: object
+      properties:
+        title:
+          type: string
+        author_id:
+          type: string
+        content:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+        articleId:
+          type: string
+        author:
+          type: string
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    NewComment:
+      type: object
+      required:
+        - articleId
+        - content
+        - username
+      properties:
+        userId:
+          type: string
+        username:
+          type: string
+        articleId:
+          type: string
+        content:
+          type: string
+    UpdateComment:
+      type: object
+      properties:
+        content:
+          type: string
+    LikeRequest:
+      type: object
+      required:
+        - articleId
+      properties:
+        articleId:
+          type: string
+        userId:
+          type: string
+    LikeReturn:
+      type: object
+      properties:
+        articleId:
+          type: string
+        userId:
+          type: string
+        like_count:
+          type: integer
+        liked:
+          type: boolean
+    RegisterUser:
+      type: object
+      required:
+        - email
+        - password
+        - username
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        username:
+          type: string
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    Tag:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    TagRequest:
+      type: object
+      required:
+        - tag
+        - article_id
+      properties:
+        tag:
+          $ref: '#/components/schemas/Tag'
+        article_id:
+          type: string
+    ArchiveResponse:
+      type: object
+      properties:
+        archive:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/Article'
+    ProfileResponse:
+      type: object
+      properties:
+        photo:
+          type: string
+          description: URL of the profile photo
+        name:
+          type: string
+          description: Full name of the profile owner
+        bio:
+          type: string
+          description: Short biography
+        blogPurpose:
+          type: string
+          description: Purpose of the blog
+        hobbies:
+          type: array
+          items:
+            type: string
+          description: List of hobbies
+        socialLinks:
+          type: object
+          additionalProperties:
+            type: string
+          description: Social media or related links
+    ContactRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "johndoe@example.com"
+        message:
+          type: string
+          example: "Hello, I would like to know more about your services."
+    ContactResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Thank you for contacting us. We will get back to you soon."
+    RSSFeed:
+      type: string
+      description: URL of the RSS feed
+    ImageUploadRequest:
+      type: object
+      required:
+        - image
+      properties:
+        image:
+          type: string
+          format: binary
+          description: アップロードする画像ファイル。
+      description: 画像アップロード用のマルチパートフォームデータ。
+
+    ImageUploadResponse:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: アップロードされた画像のURL。
+      required:
+        - url
+      description: 画像アップロード成功時のレスポンス。
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: エラーメッセージ。
+        code:
+          type: integer
+          format: int32
+          description: エラーコード。
+      required:
+        - message
+        - code
+      description: エラーレスポンスの形式。
+
+  responses:
+    UnauthorizedError:
+      description: 認証が必要な場合のエラーレスポンス
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    BadRequestError:
+      description: 不正なリクエストの場合のエラーレスポンス
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: サーバー内部エラーの場合のエラーレスポンス
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      

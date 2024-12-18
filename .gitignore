@@ -1,0 +1,7 @@
+.env
+compose.yml
+uploads/
+fonts/
+!fonts/GenShinGothic-Regular.ttf
+!fonts/Roboto-Regular.ttf
+!fonts/GenShinGothic-Bold.ttf

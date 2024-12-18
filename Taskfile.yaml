@@ -1,0 +1,38 @@
+version: '3'
+
+tasks:
+  # oapi-codegenのインストール
+  install-server-openapi-codegen:
+    cmds:
+      - go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
+
+  # OpenAPIコード生成
+  server-openapi-codegen:
+    deps:
+      - install-server-openapi-codegen
+    cmds:
+      - oapi-codegen --config=./oapi-config.yaml docs/openapi.yml
+
+  # Dockerイメージビルド（開発用: devターゲット）
+  build-dev:
+    desc: "Build the development image with hot-reload"
+    cmds:
+      - docker build --target dev -t myapp:dev .
+
+  # Dockerイメージビルド（本番用: prodターゲット）
+  build-prod:
+    desc: "Build the production image (distroless)"
+    cmds:
+      - docker build --target prod -t myapp:prod .
+
+  # 開発用コンテナ起動（ホットリロード有効）
+  run-dev:
+    desc: "Run the development container with volume mount for hot-reload"
+    cmds:
+      - docker run --rm -it -p 8080:8080 -v $PWD:/app myapp:dev
+
+  # 本番用コンテナ起動
+  run-prod:
+    desc: "Run the production container"
+    cmds:
+      - docker run --rm -it -p 8080:8080 myapp:prod
