@@ -26,6 +26,10 @@ WORKDIR /app
 COPY --from=builder /app/main /app/main
 COPY fonts /app/fonts
 
+RUN mkdir -p /uploads/images
+
+RUN mkdir /rss
+
 USER root
 
 CMD ["/app/main"]
