@@ -1,4 +1,4 @@
-FROM golang:latest AS builder
+FROM golang:latest as builder
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/main /app/main
-COPY --from=builder /app/fonts /app/fonts
+COPY fonts /app/fonts
 
 # 必要なディレクトリを作成
 RUN mkdir -p /uploads/images \
