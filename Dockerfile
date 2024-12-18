@@ -20,6 +20,7 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/main /app/main
+RUN ls -l
 COPY fonts /app/fonts
 
 # 必要なディレクトリを作成
