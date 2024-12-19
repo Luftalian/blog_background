@@ -222,6 +222,10 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		log.Println("GetUserNameById Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
+	authorNameForThumbnail := authorName.Username.String
+	if authorNameForThumbnail == "" {
+		authorNameForThumbnail = "Luftalian"
+	}
 	idStr := article.ID.String()
 	imageUrl, err := h.Config.HandleThumbnailGeneration(ctx, newArticle, tags, category.Name, authorName.Username.String)
 	if err != nil {
