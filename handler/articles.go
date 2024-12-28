@@ -2,9 +2,9 @@ package handler
 
 import (
 	"blog-backend/api"
+	"blog-backend/logger"
 	"blog-backend/model"
 	"database/sql"
-	"log"
 	"net/http"
 	"os"
 	"sort"
@@ -63,7 +63,7 @@ func (h *Handler) GetArticles(ctx echo.Context, params api.GetArticlesParams) er
 
 	apiArticles, err := convertArticlesToAPIArticles(ctx, articles, h.Repo)
 	if err != nil {
-		log.Println("Convert articles error: ", err)
+		logger.Println("Convert articles error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 
@@ -90,7 +90,7 @@ func (h *Handler) GetArticles(ctx echo.Context, params api.GetArticlesParams) er
 func (h *Handler) PostArticles(ctx echo.Context) error {
 	var req api.PostArticlesJSONRequestBody
 	if err := ctx.Bind(&req); err != nil {
-		log.Println("Bind Error: ", err)
+		logger.Println("Bind Error: ", err)
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
 
@@ -102,7 +102,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 	categoryID := uuid.MustParse(req.Category)
 	category, err := h.Repo.AddCategoryID(ctx, categoryID)
 	if err != nil {
-		log.Println("AddCategoryID Error: ", err)
+		logger.Println("AddCategoryID Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 
@@ -116,10 +116,10 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 
 	// get tags name
 	for i, tag := range tags {
-		log.Println("TagID: ", tag.ID)
+		logger.Println("TagID: ", tag.ID)
 		tagName, err := h.Repo.GetTagItemsByID(ctx, tag.ID)
 		if err != nil {
-			log.Println("GetTagNameByID Error: ", err)
+			logger.Println("GetTagNameByID Error: ", err)
 			return ctx.JSON(http.StatusInternalServerError, err)
 		}
 		tags[i].Name = tagName.Name
@@ -132,7 +132,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 	// if req.AuthorId == nil {
 	// 	newUserId, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx, req.Author)
 	// 	if err != nil {
-	// 		log.Println("CheckIPAddressAndReturnUserID Error: ", err)
+	// 		logger.Println("CheckIPAddressAndReturnUserID Error: ", err)
 	// 		return ctx.JSON(http.StatusInternalServerError, err)
 	// 	}
 	// 	userId = newUserId
@@ -141,14 +141,14 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 	// 	// update username
 	// 	user, err := h.Repo.GetUserByID(ctx, userId)
 	// 	if err != nil {
-	// 		log.Println("GetUserByID Error: ", err)
+	// 		logger.Println("GetUserByID Error: ", err)
 	// 		return ctx.JSON(http.StatusInternalServerError, err)
 	// 	}
 	// 	if user.Username.String != req.Author {
 	// 		user.Username.String = req.Author
 	// 		err = h.Repo.UpdateUser(ctx, user)
 	// 		if err != nil {
-	// 			log.Println("UpdateUser Error: ", err)
+	// 			logger.Println("UpdateUser Error: ", err)
 	// 			return ctx.JSON(http.StatusInternalServerError, err)
 	// 		}
 	// 	}
@@ -160,26 +160,26 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 	if err != nil {
 		if err.Error() != "sql: no rows in result set" {
 			// errが存在して、かつエラーが"sql: no rows in result set"でない場合はエラーを返す
-			log.Println("GetAdminUserId Error: ", err)
+			logger.Println("GetAdminUserId Error: ", err)
 			return ctx.JSON(http.StatusInternalServerError, err)
 		} else {
 			// admin userが存在しない場合は新規作成
 			newUserId, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx, req.Author)
 			if err != nil {
-				log.Println("CheckIPAddressAndReturnUserID Error: ", err)
+				logger.Println("CheckIPAddressAndReturnUserID Error: ", err)
 				return ctx.JSON(http.StatusInternalServerError, err)
 			}
 			userId = newUserId
 		}
 	} else if len(users) > 1 {
 		// admin userが複数いる場合はエラーを返す
-		log.Println("Multiple admin users found")
+		logger.Println("Multiple admin users found")
 		return ctx.JSON(http.StatusInternalServerError, "Multiple admin users found")
 	} else if len(users) == 0 {
 		// admin userが存在しない場合は新規作成
 		newUserId, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx, req.Author)
 		if err != nil {
-			log.Println("CheckIPAddressAndReturnUserID Error: ", err)
+			logger.Println("CheckIPAddressAndReturnUserID Error: ", err)
 			return ctx.JSON(http.StatusInternalServerError, err)
 		}
 		userId = newUserId
@@ -190,7 +190,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 			adminUser.Username.String = req.Author
 			err = h.Repo.UpdateUser(ctx, adminUser)
 			if err != nil {
-				log.Println("UpdateUser Error: ", err)
+				logger.Println("UpdateUser Error: ", err)
 				return ctx.JSON(http.StatusInternalServerError, err)
 			}
 		}
@@ -210,17 +210,17 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 
 	article, err := h.Repo.CreateArticle(ctx, newArticle)
 	if err != nil {
-		log.Println("CreateArticle Error: ", err)
+		logger.Println("CreateArticle Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 	err = h.Repo.AddTagPairsByArticle(ctx, articleId, tags)
 	if err != nil {
-		log.Println("AddTagPairsByArticle Error: ", err)
+		logger.Println("AddTagPairsByArticle Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 	authorName, err := h.Repo.GetUserNameById(ctx, userId)
 	if err != nil {
-		log.Println("GetUserNameById Error: ", err)
+		logger.Println("GetUserNameById Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 	authorNameForThumbnail := authorName.Username.String
@@ -230,13 +230,13 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 	idStr := article.ID.String()
 	imageUrl, imagePath, imageFileName, err := h.Config.HandleThumbnailGeneration(ctx, newArticle, tags, category.Name, authorName.Username.String)
 	if err != nil {
-		log.Println("HandleThumbnailGeneration Error: ", err)
+		logger.Println("HandleThumbnailGeneration Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 	if imageUrl != "" {
 		err = h.Repo.UpdateArticleImageURL(ctx, articleId, imageUrl)
 		if err != nil {
-			log.Println("UpdateArticleImage Error: ", err)
+			logger.Println("UpdateArticleImage Error: ", err)
 			return ctx.JSON(http.StatusInternalServerError, err)
 		}
 	}
@@ -246,14 +246,14 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		Id: &idStr,
 	})
 	if err != nil {
-		log.Println("JSONレスポンスの送信に失敗しました: ", err)
+		logger.Println("JSONレスポンスの送信に失敗しました: ", err)
 	}
 
 	// ここでDriveへアップロード
 	if h.DriveService != nil {
 		model.UploadAsyncToDrive(h.DriveService, imagePath, imageFileName, os.Getenv("DRIVE_FOLDER_ID"))
 	} else {
-		log.Println("Drive service is not set")
+		logger.Println("Drive service is not set")
 	}
 
 	{
@@ -261,7 +261,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		articles, err := h.Repo.GetArticlesByCategoryTagSearch(ctx, &uuid.Nil, &uuid.Nil, nil, &limit, "created_at", "desc")
 		if err != nil {
 			// エラーログを出力
-			log.Printf("Failed to fetch articles: %v", err)
+			logger.Printf("Failed to fetch articles: %v", err)
 			// return ctx.JSON(http.StatusInternalServerError, "Failed to fetch articles")
 		}
 
@@ -271,14 +271,14 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		})
 
 		for i, article := range articles {
-			log.Printf("Article %d: %s", i, article.Title)
-			log.Printf("Article %d: %s", i, article.CreatedAt)
+			logger.Printf("Article %d: %s", i, article.Title)
+			logger.Printf("Article %d: %s", i, article.CreatedAt)
 		}
 
 		// RSSフィードの設定
 		err = h.Config.RSSmaker(ctx, articles)
 		if err != nil {
-			log.Printf("Failed to generate RSS feed: %v", err)
+			logger.Printf("Failed to generate RSS feed: %v", err)
 			// return ctx.JSON(http.StatusInternalServerError, err)
 		}
 	}
@@ -318,7 +318,7 @@ func (h *Handler) GetArticlesId(ctx echo.Context, id string) error {
 			return err
 		}
 		if !isError {
-			log.Println("SaveAnalysis Error: ")
+			logger.Println("SaveAnalysis Error: ")
 			err = h.Repo.SaveViewCount(ctx, articleId)
 			if err != nil {
 				return err
@@ -328,7 +328,7 @@ func (h *Handler) GetArticlesId(ctx echo.Context, id string) error {
 			if err != nil {
 				return err
 			}
-			log.Println("ViewCount: ", article.ViewCount)
+			logger.Println("ViewCount: ", article.ViewCount)
 		}
 		return nil
 	}
@@ -342,7 +342,7 @@ func (h *Handler) GetArticlesId(ctx echo.Context, id string) error {
 	if err != nil {
 		errSaveAnalysis := saveAnalysis(ctx, articleId, "GetArticlesId", true)
 		if errSaveAnalysis != nil {
-			log.Println("SaveAnalysis Error: ", errSaveAnalysis)
+			logger.Println("SaveAnalysis Error: ", errSaveAnalysis)
 		}
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
@@ -351,7 +351,7 @@ func (h *Handler) GetArticlesId(ctx echo.Context, id string) error {
 	if err != nil {
 		errSaveAnalysis := saveAnalysis(ctx, articleId, "GetArticlesId", true)
 		if errSaveAnalysis != nil {
-			log.Println("SaveAnalysis Error: ", errSaveAnalysis)
+			logger.Println("SaveAnalysis Error: ", errSaveAnalysis)
 		}
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
@@ -360,13 +360,13 @@ func (h *Handler) GetArticlesId(ctx echo.Context, id string) error {
 	if err != nil {
 		errSaveAnalysis := saveAnalysis(ctx, articleId, "GetArticlesId", true)
 		if errSaveAnalysis != nil {
-			log.Println("SaveAnalysis Error: ", errSaveAnalysis)
+			logger.Println("SaveAnalysis Error: ", errSaveAnalysis)
 		}
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 	errSaveAnalysis := saveAnalysis(ctx, articleId, "GetArticlesId", false)
 	if errSaveAnalysis != nil {
-		log.Println("SaveAnalysis Error: ", errSaveAnalysis)
+		logger.Println("SaveAnalysis Error: ", errSaveAnalysis)
 	}
 	return ctx.JSON(http.StatusOK, apiArticle[0])
 }

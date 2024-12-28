@@ -1,13 +1,13 @@
 package main
 
 import (
-	"log"
 	"os"
 	"strconv"
 	"strings"
 
 	"blog-backend/api"
 	"blog-backend/handler"
+	"blog-backend/logger"
 	"blog-backend/migration"
 	"blog-backend/model"
 
@@ -17,6 +17,11 @@ import (
 )
 
 func main() {
+	// ログをSlackに送信
+	logger.InitSlackForLogger()
+
+	model.InitSlackForContact()
+
 	e := echo.New()
 
 	allowOrigins := strings.Split(os.Getenv("ALLOW_ORIGINS"), ",")
@@ -36,7 +41,7 @@ func main() {
 	if err != nil {
 		dev = false
 	}
-	log.Println("development mode:", dev)
+	logger.Println("development mode:", dev)
 
 	// connect to database
 	db, err := sqlx.Connect("mysql", model.MySQL().FormatDSN())

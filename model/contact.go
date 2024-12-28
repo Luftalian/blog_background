@@ -1,16 +1,48 @@
 package model
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
+
+	"github.com/labstack/echo/v4"
 )
 
-// ContactForm はフロントエンドから送信されるデータの構造体です。
-type ContactForm struct {
-	Name    string `json:"name"`
-	Email   string `json:"email"`
-	Message string `json:"message"`
+var slackWebhookForContact string
+
+func InitSlackForContact() {
+	slackWebhookForContact = os.Getenv("SLACK_WEBHOOK_URL_CONTACT")
 }
 
-func SendEmail(form ContactForm) error {
-	return fmt.Errorf("Not implemented")
+// postToSlack は Webhook URL が設定されていればメッセージを POST 送信します
+func postToSlack(msg string) (err error) {
+	if slackWebhookForContact == "" {
+		return fmt.Errorf("slackWebhookForContact is not set")
+	}
+	payload := map[string]string{"text": msg}
+	body, _ := json.Marshal(payload)
+
+	req, err := http.NewRequest("POST", slackWebhookForContact, bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	_, err = client.Do(req)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func SendSlack(ctx echo.Context, name, email, message string) error {
+	msg := "New contact message\n" +
+		"Name: " + name + "\n" +
+		"Email: " + email + "\n" +
+		"Message: " + message
+	err := postToSlack(msg)
+	return err
 }

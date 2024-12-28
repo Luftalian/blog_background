@@ -1,13 +1,13 @@
 package model
 
 import (
+	"blog-backend/logger"
 	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
 	"image/png"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,9 +23,9 @@ func generateThumbnail(article Article, tags []TagItem, category string, authorN
 	width := 300
 	height := 300
 
-	log.Println("authorName", authorName)
-	log.Println("category", category)
-	log.Println("tags", tagsToStringSlice(tags))
+	logger.Println("authorName", authorName)
+	logger.Println("category", category)
+	logger.Println("tags", tagsToStringSlice(tags))
 
 	// 背景色の設定
 	bgColor := color.RGBA{173, 216, 230, 255} // LightBlue
@@ -37,13 +37,13 @@ func generateThumbnail(article Article, tags []TagItem, category string, authorN
 	// フォントファイルの読み込み
 	fontBytes, err := ioutil.ReadFile("fonts/Roboto-Regular.ttf")
 	if err != nil {
-		log.Printf("フォントファイルの読み込みに失敗しました: %v", err)
+		logger.Printf("フォントファイルの読み込みに失敗しました: %v", err)
 		return nil, err
 	}
 
 	f, err := freetype.ParseFont(fontBytes)
 	if err != nil {
-		log.Printf("フォントの解析に失敗しました: %v", err)
+		logger.Printf("フォントの解析に失敗しました: %v", err)
 		return nil, err
 	}
 
@@ -66,7 +66,7 @@ func generateThumbnail(article Article, tags []TagItem, category string, authorN
 	titlePt := freetype.Pt(40, 50) // タイトルの描画位置
 	_, err = c.DrawString(article.Title, titlePt)
 	if err != nil {
-		log.Printf("タイトルの描画に失敗しました: %v", err)
+		logger.Printf("タイトルの描画に失敗しました: %v", err)
 		return nil, err
 	}
 
@@ -77,21 +77,21 @@ func generateThumbnail(article Article, tags []TagItem, category string, authorN
 	infoPt := freetype.Pt(40, 120)
 	_, err = c.DrawString("Author: "+authorName, infoPt)
 	if err != nil {
-		log.Printf("著者名の描画に失敗しました: %v", err)
+		logger.Printf("著者名の描画に失敗しました: %v", err)
 		return nil, err
 	}
 
 	tagsPt := freetype.Pt(40, 200)
 	_, err = c.DrawString("#"+strings.Join(tagsToStringSlice(tags), ", #"), tagsPt)
 	if err != nil {
-		log.Printf("タグの描画に失敗しました: %v", err)
+		logger.Printf("タグの描画に失敗しました: %v", err)
 		return nil, err
 	}
 
 	categoryPt := freetype.Pt(40, 250)
 	_, err = c.DrawString("Category: "+category, categoryPt)
 	if err != nil {
-		log.Printf("カテゴリの描画に失敗しました: %v", err)
+		logger.Printf("カテゴリの描画に失敗しました: %v", err)
 		return nil, err
 	}
 
@@ -167,8 +167,8 @@ func generateThumbnailNew(article Article, tags []TagItem, category string, auth
 		tempY += (availableHeightForTitle - titleHeight) / 2
 	}
 
-	log.Println("titleHeight: ", titleHeight)
-	log.Println("maxHeightForTitle: ", availableHeightForTitle)
+	logger.Println("titleHeight: ", titleHeight)
+	logger.Println("maxHeightForTitle: ", availableHeightForTitle)
 
 	for _, line := range titleWrapped {
 		dc.SetColor(textColor)
@@ -190,7 +190,7 @@ func generateThumbnailNew(article Article, tags []TagItem, category string, auth
 	if authorHeight < availableHeightForAuthor {
 		tempY += (availableHeightForAuthor - authorHeight) / 2
 	} else {
-		log.Fatalf("authorHeight is too large")
+		logger.Fatalf("authorHeight is too large")
 	}
 
 	for _, line := range authorWrapped {
@@ -220,7 +220,7 @@ func generateThumbnailNew(article Article, tags []TagItem, category string, auth
 	// タグの描画
 	fontFile = "fonts/GenShinGothic-Regular.ttf"
 	tagFontSize := 14.0
-	log.Println(availableHeight+marginTop-tempY, availableHeightForTags, dataStartY, tempY)
+	logger.Println(availableHeight+marginTop-tempY, availableHeightForTags, dataStartY, tempY)
 	padding := 10.0
 	maxHeightForTags := min(availableHeight+marginTop-tempY, availableHeightForTags, dataStartY-tempY)
 	maxHeightForOneTag := (maxHeightForTags - spaceBetweenElements - (spaceBetweenTagElements+padding)*float64(len(tags)-1)) / float64(len(tags))
@@ -288,18 +288,18 @@ func saveImage(img *image.RGBA, path string) error {
 	// 画像をファイルに保存
 	out, err := os.Create(path)
 	if err != nil {
-		log.Printf("failed to create thumbnail file: %v", err)
+		logger.Printf("failed to create thumbnail file: %v", err)
 		return err
 	}
 	defer out.Close()
 
 	err = png.Encode(out, img)
 	if err != nil {
-		log.Printf("failed to encode thumbnail: %v", err)
+		logger.Printf("failed to encode thumbnail: %v", err)
 		return err
 	}
 
-	log.Printf("thumbnail saved: %s", path)
+	logger.Printf("thumbnail saved: %s", path)
 	return nil
 }
 
@@ -341,20 +341,20 @@ func (c *Configuration) HandleThumbnailGeneration(ctx echo.Context, article Arti
 	if _, err := os.Stat(c.ImageUploadPath); os.IsNotExist(err) {
 		err = os.MkdirAll(c.ImageUploadPath, os.ModePerm)
 		if err != nil {
-			log.Println("Failed to create image upload directory:", err)
+			logger.Println("Failed to create image upload directory:", err)
 			return "", "", "", err
 		}
 	}
 
 	thumbnail, err := generateThumbnailNew(article, tags, category, authorName)
 	if err != nil {
-		log.Println("Failed to generate thumbnail:", err)
+		logger.Println("Failed to generate thumbnail:", err)
 		return "", "", "", err
 	}
 
 	err = saveImage(thumbnail, thumbnailPath)
 	if err != nil {
-		log.Println("Failed to save thumbnail:", err)
+		logger.Println("Failed to save thumbnail:", err)
 		return "", "", "", err
 	}
 

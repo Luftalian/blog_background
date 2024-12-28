@@ -2,9 +2,9 @@ package handler
 
 import (
 	"blog-backend/api"
+	"blog-backend/logger"
 	"blog-backend/model"
 	"database/sql"
-	"log"
 	"net/http"
 	"time"
 
@@ -18,11 +18,11 @@ func (h *Handler) GetComments(ctx echo.Context, params api.GetCommentsParams) er
 	// find comments by article id
 	comments, err := h.Repo.GetCommentsByArticle(ctx, uuid.MustParse(params.ArticleId), nil)
 	if err != nil {
-		log.Println("GetCommentsByArticle Error: ", err)
+		logger.Println("GetCommentsByArticle Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 	if len(comments) == 0 {
-		log.Println("No comments found")
+		logger.Println("No comments found")
 		return ctx.JSON(http.StatusOK, []model.Comment{})
 	}
 	return ctx.JSON(http.StatusOK, comments)
@@ -31,7 +31,7 @@ func (h *Handler) GetComments(ctx echo.Context, params api.GetCommentsParams) er
 // Post a comment
 // (POST /comments)
 func (h *Handler) PostComments(ctx echo.Context) error {
-	log.Println("PostComments")
+	logger.Println("PostComments")
 	var req api.PostCommentsJSONRequestBody
 	if err := ctx.Bind(&req); err != nil {
 		return ctx.JSON(http.StatusBadRequest, err)
@@ -43,12 +43,12 @@ func (h *Handler) PostComments(ctx echo.Context) error {
 	} else {
 		userIdFromDB, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx, req.Username)
 		if err != nil {
-			log.Println("CheckIPAddressAndReturnUserIDWithUserName Error: ", err)
+			logger.Println("CheckIPAddressAndReturnUserIDWithUserName Error: ", err)
 			return ctx.JSON(http.StatusInternalServerError, err)
 		}
 		userId = userIdFromDB
 	}
-	log.Println("UserId: ", userId)
+	logger.Println("UserId: ", userId)
 	// add comment
 	err := h.Repo.CreateComment(ctx, model.Comment{
 		ID:        uuid.New(),
@@ -59,7 +59,7 @@ func (h *Handler) PostComments(ctx echo.Context) error {
 		Author:    sql.NullString{String: req.Username, Valid: req.Username != ""},
 	})
 	if err != nil {
-		log.Println("CreateComment Error: ", err)
+		logger.Println("CreateComment Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 	return ctx.JSON(http.StatusCreated, "Comment created")

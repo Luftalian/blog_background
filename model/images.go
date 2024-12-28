@@ -1,9 +1,9 @@
 package model
 
 import (
+	"blog-backend/logger"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -68,7 +68,7 @@ func UploadAsyncToDrive(service *drive.Service, path, name, folderID string) {
 	go func() {
 		fileToUpload, e := os.Open(path)
 		if e != nil {
-			log.Println("Failed to open uploaded file:", e)
+			logger.Println("Failed to open uploaded file:", e)
 			return
 		}
 		defer fileToUpload.Close()
@@ -77,7 +77,7 @@ func UploadAsyncToDrive(service *drive.Service, path, name, folderID string) {
 			Parents: []string{folderID},
 		}
 		if _, e := service.Files.Create(driveFile).Media(fileToUpload).Do(); e != nil {
-			log.Println("Failed to upload to Drive:", e)
+			logger.Println("Failed to upload to Drive:", e)
 		}
 	}()
 }

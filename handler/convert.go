@@ -2,9 +2,9 @@ package handler
 
 import (
 	"blog-backend/api"
+	"blog-backend/logger"
 	"blog-backend/model"
 	"database/sql"
-	"log"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -36,7 +36,7 @@ func convertArticlesToAPIArticles(ctx echo.Context, articles []model.Article, re
 		if _, ok := authorNameIdMap[article.AuthorID]; !ok {
 			author, err := repo.GetUserNameById(ctx, article.AuthorID)
 			if err != nil {
-				log.Println("error getting author name", err)
+				logger.Println("error getting author name", err)
 				return nil, err
 			}
 			authorNameIdMap[article.AuthorID] = author.Username.String
@@ -46,7 +46,7 @@ func convertArticlesToAPIArticles(ctx echo.Context, articles []model.Article, re
 		if _, ok := catergoryNameIdMap[article.CategoryID]; !ok {
 			category, err := repo.GetCategoryNameByID(ctx, article.CategoryID)
 			if err != nil {
-				log.Println("error getting category name", err)
+				logger.Println("error getting category name", err)
 				return nil, err
 			}
 			category_id := category.ID.String()
@@ -59,7 +59,7 @@ func convertArticlesToAPIArticles(ctx echo.Context, articles []model.Article, re
 
 		tags, err := repo.GetTagsByArticle(ctx, article.ID, nil)
 		if err != nil {
-			log.Println("error getting tags", err)
+			logger.Println("error getting tags", err)
 			return nil, err
 		}
 		var tagList []api.Tag
@@ -73,7 +73,7 @@ func convertArticlesToAPIArticles(ctx echo.Context, articles []model.Article, re
 
 		likeCount, err := repo.GetLikesCountByArticle(ctx, article.ID)
 		if err != nil {
-			log.Println("error getting like count", err)
+			logger.Println("error getting like count", err)
 			return nil, err
 		}
 

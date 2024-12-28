@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 	"time"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"blog-backend/api"
+	"blog-backend/logger"
 	"blog-backend/model"
 )
 
@@ -26,7 +26,7 @@ func (h *Handler) PostLikes(ctx echo.Context) error {
 	} else {
 		userIDFromDB, err := h.Repo.CheckIPAddressAndReturnUserID(ctx)
 		if err != nil {
-			log.Println("CheckIPAddressAndReturnUserID Error: ", err)
+			logger.Println("CheckIPAddressAndReturnUserID Error: ", err)
 			return ctx.JSON(http.StatusInternalServerError, err)
 		}
 		userID = userIDFromDB
@@ -39,7 +39,7 @@ func (h *Handler) PostLikes(ctx echo.Context) error {
 		CreatedAt: time.Now(),
 	})
 	if err != nil {
-		log.Println("CreateLike Error: ", err)
+		logger.Println("CreateLike Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 	return ctx.JSON(http.StatusCreated, "like added")
@@ -56,7 +56,7 @@ func (h *Handler) GetLikes(ctx echo.Context, params api.GetLikesParams) error {
 	// CheckIPAddressAndReturnUserID and check if the user has liked the article
 	userID, err := h.Repo.CheckIPAddressAndReturnUserID(ctx)
 	if err != nil {
-		log.Println("CheckIPAddressAndReturnUserID Error: ", err)
+		logger.Println("CheckIPAddressAndReturnUserID Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 	liked := false

@@ -1,8 +1,8 @@
 package model
 
 import (
+	"blog-backend/logger"
 	"database/sql"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,7 +11,7 @@ import (
 
 func (repo *Repository) CheckIPAddressAndReturnUserID(ctx echo.Context) (uuid.UUID, error) {
 	ip := ctx.RealIP()
-	log.Println("ip address is", ip)
+	logger.Println("ip address is", ip)
 	user, err := repo.GetUserByIpAddress(ctx, ip)
 	if err != nil && err.Error() != "sql: no rows in result set" {
 		return uuid.Nil, err
@@ -36,10 +36,10 @@ func (repo *Repository) CheckIPAddressAndReturnUserID(ctx echo.Context) (uuid.UU
 
 func (repo *Repository) CheckIPAddressAndReturnUserIDWithUserName(ctx echo.Context, username string) (uuid.UUID, error) {
 	ip := ctx.RealIP()
-	log.Println("ip address is", ip)
+	logger.Println("ip address is", ip)
 	user, err := repo.GetUserByIpAddress(ctx, ip)
 	if err != nil && err.Error() != "sql: no rows in result set" {
-		log.Println("error getting user by ip address", err)
+		logger.Println("error getting user by ip address", err)
 		return uuid.Nil, err
 	}
 	if err == nil {
@@ -47,7 +47,7 @@ func (repo *Repository) CheckIPAddressAndReturnUserIDWithUserName(ctx echo.Conte
 			user.Username.String = username
 			err := repo.UpdateUser(ctx, user)
 			if err != nil {
-				log.Println("error updating user", err)
+				logger.Println("error updating user", err)
 				return uuid.Nil, err
 			}
 		}
@@ -63,7 +63,7 @@ func (repo *Repository) CheckIPAddressAndReturnUserIDWithUserName(ctx echo.Conte
 	}
 	err = repo.CreateUser(ctx, newUser)
 	if err != nil {
-		log.Println("error creating user", err)
+		logger.Println("error creating user", err)
 		return uuid.Nil, err
 	}
 	return user.ID, nil

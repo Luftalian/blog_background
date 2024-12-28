@@ -1,8 +1,8 @@
 package model
 
 import (
+	"blog-backend/logger"
 	"errors"
-	"log"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -135,7 +135,7 @@ func (r *Repository) AddTags(ctx echo.Context, tags []Tag) error {
 	var newTags []Tag
 	tagsFromDB, err := r.GetTags(ctx, nil)
 	if err != nil {
-		log.Println("GetTags error:", err)
+		logger.Println("GetTags error:", err)
 		return err
 	}
 	for _, tag := range tags {
@@ -155,23 +155,23 @@ func (r *Repository) AddTags(ctx echo.Context, tags []Tag) error {
 	}
 	tx, err := r.db.BeginTxx(ctx.Request().Context(), nil)
 	if err != nil {
-		log.Println("BeginTxx error:", err)
+		logger.Println("BeginTxx error:", err)
 		return err
 	}
 	_, err = tx.NamedExecContext(ctx.Request().Context(), "INSERT INTO tags (id, name) VALUES (:id, :name)", newTags)
 	if err != nil {
 		tx.Rollback()
-		log.Println("NamedExecContext error:", err)
+		logger.Println("NamedExecContext error:", err)
 		return err
 	}
 	_, err = tx.NamedExecContext(ctx.Request().Context(), "INSERT INTO article_tags (article_id, tag_id) VALUES (:article_id, :id)", newTags)
 	if err != nil {
 		tx.Rollback()
-		log.Println("NamedExecContext error2:", err)
+		logger.Println("NamedExecContext error2:", err)
 		return err
 	}
 	err = tx.Commit()
-	log.Println("Commit error:", err)
+	logger.Println("Commit error:", err)
 	return err
 }
 

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"blog-backend/api"
+	"blog-backend/logger"
 	"blog-backend/model"
 )
 
@@ -20,7 +20,7 @@ func (h *Handler) UploadImage(ctx echo.Context) error {
 	// リクエストからファイルを取得
 	file, err := ctx.FormFile("image")
 	if err != nil {
-		log.Println("Image file is required")
+		logger.Println("Image file is required")
 		return ctx.JSON(http.StatusBadRequest, api.ErrorResponse{
 			Message: "Image file is required",
 			Code:    http.StatusBadRequest,
@@ -29,7 +29,7 @@ func (h *Handler) UploadImage(ctx echo.Context) error {
 
 	// ファイルサイズの検証
 	if file.Size > h.Config.MaxFileSize {
-		log.Println("File size exceeds the maximum limit of ", h.Config.MaxFileSize, " bytes")
+		logger.Println("File size exceeds the maximum limit of ", h.Config.MaxFileSize, " bytes")
 		return ctx.JSON(http.StatusBadRequest, api.ErrorResponse{
 			Message: fmt.Sprintf("File size exceeds the maximum limit of %d bytes", h.Config.MaxFileSize),
 			Code:    http.StatusBadRequest,
@@ -39,7 +39,7 @@ func (h *Handler) UploadImage(ctx echo.Context) error {
 	// ファイルタイプの検証
 	src, err := file.Open()
 	if err != nil {
-		log.Println("Failed to open uploaded file: ", err)
+		logger.Println("Failed to open uploaded file: ", err)
 		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
 			Message: "Failed to open uploaded file",
 			Code:    http.StatusInternalServerError,
@@ -51,7 +51,7 @@ func (h *Handler) UploadImage(ctx echo.Context) error {
 	buffer := make([]byte, 512)
 	_, err = src.Read(buffer)
 	if err != nil {
-		log.Println("Failed to read file: ", err)
+		logger.Println("Failed to read file: ", err)
 		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
 			Message: "Failed to read file",
 			Code:    http.StatusInternalServerError,
@@ -63,7 +63,7 @@ func (h *Handler) UploadImage(ctx echo.Context) error {
 	allowedTypes := []string{"image/jpeg", "image/png", "image/gif"}
 
 	if !model.IsAllowedContentType(contentType, allowedTypes) {
-		log.Println("Unsupported image format. Only JPEG, PNG, and GIF are allowed.")
+		logger.Println("Unsupported image format. Only JPEG, PNG, and GIF are allowed.")
 		return ctx.JSON(http.StatusBadRequest, api.ErrorResponse{
 			Message: "Unsupported image format. Only JPEG, PNG, and GIF are allowed.",
 			Code:    http.StatusBadRequest,
@@ -76,7 +76,7 @@ func (h *Handler) UploadImage(ctx echo.Context) error {
 		// 拡張子がない場合、MIMEタイプから推測
 		ext = model.MimeExtension(contentType)
 		if ext == "" {
-			log.Println("Cannot determine file extension")
+			logger.Println("Cannot determine file extension")
 			return ctx.JSON(http.StatusBadRequest, api.ErrorResponse{
 				Message: "Cannot determine file extension",
 				Code:    http.StatusBadRequest,
@@ -103,7 +103,7 @@ func (h *Handler) UploadImage(ctx echo.Context) error {
 
 	// ファイルを保存（手動で保存する方法）
 	if err := model.SaveImageToLocal(src, dstPath); err != nil {
-		log.Println("Failed to create file: ", err)
+		logger.Println("Failed to create file: ", err)
 		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
 			Message: "アップロードされた画像を保存できませんでした",
 			Code:    http.StatusInternalServerError,
@@ -118,14 +118,14 @@ func (h *Handler) UploadImage(ctx echo.Context) error {
 		Url: imageURL,
 	})
 	if err != nil {
-		log.Println("JSONレスポンスの送信に失敗しました: ", err)
+		logger.Println("JSONレスポンスの送信に失敗しました: ", err)
 	}
 
 	// 非同期でGoogle Driveへアップロード
 	if h.DriveService != nil {
 		model.UploadAsyncToDrive(h.DriveService, dstPath, newFileName, os.Getenv("DRIVE_FOLDER_ID"))
 	} else {
-		log.Println("Drive service is not set")
+		logger.Println("Drive service is not set")
 	}
 	return nil
 }
