@@ -12,7 +12,7 @@ import (
 // Get a list of tags
 // (GET /tags)
 func (h *Handler) GetTags(ctx echo.Context) error {
-	tags, err := h.Repo.GetTagList(ctx)
+	tags, err := h.Repo.GetTagList(ctx.Request().Context())
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
@@ -38,7 +38,7 @@ func (h *Handler) PostTags(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
 	tagId := uuid.New()
-	tag, err := h.Repo.AddTagItem(ctx, model.TagItem{
+	tag, err := h.Repo.AddTagItem(ctx.Request().Context(), model.TagItem{
 		ID:   tagId,
 		Name: *req.Name,
 	})
@@ -60,7 +60,7 @@ func (h *Handler) PostTagsArticleId(ctx echo.Context, articleId string) error {
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
 	article_id := uuid.MustParse(articleId)
-	err := h.Repo.AddTag(ctx, model.Tag{
+	err := h.Repo.AddTag(ctx.Request().Context(), model.Tag{
 		ID:        uuid.New(),
 		ArticleID: article_id,
 		Name:      *req.Tag.Name,

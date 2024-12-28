@@ -16,7 +16,7 @@ import (
 // (GET /comments)
 func (h *Handler) GetComments(ctx echo.Context, params api.GetCommentsParams) error {
 	// find comments by article id
-	comments, err := h.Repo.GetCommentsByArticle(ctx, uuid.MustParse(params.ArticleId), nil)
+	comments, err := h.Repo.GetCommentsByArticle(ctx.Request().Context(), uuid.MustParse(params.ArticleId), nil)
 	if err != nil {
 		logger.Println("GetCommentsByArticle Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
@@ -41,7 +41,7 @@ func (h *Handler) PostComments(ctx echo.Context) error {
 	if req.UserId != nil {
 		userId = uuid.MustParse(*req.UserId)
 	} else {
-		userIdFromDB, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx, req.Username)
+		userIdFromDB, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx.Request().Context(), ctx.RealIP(), req.Username)
 		if err != nil {
 			logger.Println("CheckIPAddressAndReturnUserIDWithUserName Error: ", err)
 			return ctx.JSON(http.StatusInternalServerError, err)
@@ -50,7 +50,7 @@ func (h *Handler) PostComments(ctx echo.Context) error {
 	}
 	logger.Println("UserId: ", userId)
 	// add comment
-	err := h.Repo.CreateComment(ctx, model.Comment{
+	err := h.Repo.CreateComment(ctx.Request().Context(), model.Comment{
 		ID:        uuid.New(),
 		ArticleID: uuid.MustParse(req.ArticleId),
 		AuthorID:  userId,
@@ -68,7 +68,7 @@ func (h *Handler) PostComments(ctx echo.Context) error {
 // Delete a comment
 // (DELETE /comments/{id})
 func (h *Handler) DeleteCommentsId(ctx echo.Context, id string) error {
-	err := h.Repo.DeleteComment(ctx, uuid.MustParse(id))
+	err := h.Repo.DeleteComment(ctx.Request().Context(), uuid.MustParse(id))
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
@@ -83,7 +83,7 @@ func (h *Handler) PatchCommentsId(ctx echo.Context, id string) error {
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
 	// update comment
-	err := h.Repo.UpdateComment(ctx, model.Comment{
+	err := h.Repo.UpdateComment(ctx.Request().Context(), model.Comment{
 		ID:      uuid.MustParse(id),
 		Content: *req.Content,
 	})

@@ -12,7 +12,7 @@ import (
 // Get a list of categories
 // (GET /categories)
 func (h *Handler) GetCategories(ctx echo.Context) error {
-	categories, err := h.Repo.GetCategories(ctx, nil)
+	categories, err := h.Repo.GetCategories(ctx.Request().Context(), nil)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
@@ -38,7 +38,7 @@ func (h *Handler) PostCategories(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
 	categoryId := uuid.New()
-	err := h.Repo.CreateCategory(ctx, model.Category{
+	err := h.Repo.CreateCategory(ctx.Request().Context(), model.Category{
 		ID:   categoryId,
 		Name: *req.Name,
 	})

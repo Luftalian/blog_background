@@ -24,7 +24,7 @@ func (h *Handler) PostContact(ctx echo.Context) error {
 	}
 
 	// send Slack to admin
-	err := model.SendSlack(ctx, *req.Name, string(*req.Email), *req.Message)
+	err := model.SendSlack(ctx.Request().Context(), *req.Name, string(*req.Email), *req.Message)
 	if err != nil {
 		logger.Println("Failed to send message to Slack: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)

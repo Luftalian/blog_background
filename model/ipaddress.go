@@ -2,15 +2,14 @@ package model
 
 import (
 	"blog-backend/logger"
+	"context"
 	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 )
 
-func (repo *Repository) CheckIPAddressAndReturnUserID(ctx echo.Context) (uuid.UUID, error) {
-	ip := ctx.RealIP()
+func (repo *Repository) CheckIPAddressAndReturnUserID(ctx context.Context, ip string) (uuid.UUID, error) {
 	logger.Println("ip address is", ip)
 	user, err := repo.GetUserByIpAddress(ctx, ip)
 	if err != nil && err.Error() != "sql: no rows in result set" {
@@ -34,8 +33,7 @@ func (repo *Repository) CheckIPAddressAndReturnUserID(ctx echo.Context) (uuid.UU
 	return user.ID, nil
 }
 
-func (repo *Repository) CheckIPAddressAndReturnUserIDWithUserName(ctx echo.Context, username string) (uuid.UUID, error) {
-	ip := ctx.RealIP()
+func (repo *Repository) CheckIPAddressAndReturnUserIDWithUserName(ctx context.Context, ip, username string) (uuid.UUID, error) {
 	logger.Println("ip address is", ip)
 	user, err := repo.GetUserByIpAddress(ctx, ip)
 	if err != nil && err.Error() != "sql: no rows in result set" {

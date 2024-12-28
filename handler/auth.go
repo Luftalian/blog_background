@@ -20,7 +20,7 @@ func (h *Handler) PostAuthLogin(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
 	// check Email and password
-	user, err := h.Repo.GetUserByEmailAndPassword(ctx, string(req.Email), string(req.Password))
+	user, err := h.Repo.GetUserByEmailAndPassword(ctx.Request().Context(), string(req.Email), string(req.Password))
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
@@ -51,7 +51,7 @@ func (h *Handler) PostAuthRegister(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 
-	err = h.Repo.CreateUser(ctx, model.User{
+	err = h.Repo.CreateUser(ctx.Request().Context(), model.User{
 		ID:           uuid.New(),
 		Email:        sql.NullString{String: string(req.Email), Valid: req.Email != ""},
 		PasswordHash: sql.NullString{String: string(hashedPassword), Valid: true},

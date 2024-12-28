@@ -2,6 +2,7 @@ package model
 
 import (
 	"blog-backend/logger"
+	"context"
 	"fmt"
 	"image"
 	"image/color"
@@ -15,7 +16,6 @@ import (
 	"github.com/fogleman/gg"
 	"github.com/golang/freetype"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"
 )
 
 func generateThumbnail(article Article, tags []TagItem, category string, authorName string) (*image.RGBA, error) {
@@ -331,7 +331,7 @@ func WordWrapJapanese(text string, maxWidth float64, dc *gg.Context) []string {
 	return lines
 }
 
-func (c *Configuration) HandleThumbnailGeneration(ctx echo.Context, article Article, tags []TagItem, category string, authorName string) (string, string, string, error) {
+func (c *Configuration) HandleThumbnailGeneration(ctx context.Context, article Article, tags []TagItem, category string, authorName string) (string, string, string, error) {
 	// 画像を保存するパスを生成
 	ext := ".png"
 	thumbnailFileName := uuid.New().String() + "_thumb" + ext

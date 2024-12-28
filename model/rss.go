@@ -2,15 +2,15 @@ package model
 
 import (
 	"blog-backend/logger"
+	"context"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/gorilla/feeds"
-	"github.com/labstack/echo/v4"
 )
 
-func (c *Configuration) RSSmaker(ctx echo.Context, articles []Article) error {
+func (c *Configuration) RSSmaker(ctx context.Context, articles []Article) error {
 	// RSSフィードの基本情報を設定
 	feed := &feeds.Feed{
 		Title:       "My Blog",

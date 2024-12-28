@@ -67,6 +67,12 @@ func main() {
 	// ハンドラーにGoogle Driveサービスを渡す
 	h := handler.New(repo, config, driveService)
 
+	// RSSフィードの初回生成
+	err = model.SetupFirstRss(repo, config)
+	if err != nil {
+		logger.Printf("Failed to setup RSS feed: %v", err)
+	}
+
 	// ルーティング
 	api.RegisterHandlersWithBaseURL(e, h, "/api/v1")
 

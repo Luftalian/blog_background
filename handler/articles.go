@@ -30,7 +30,7 @@ func (h *Handler) GetArticles(ctx echo.Context, params api.GetArticlesParams) er
 	tagName := ""
 	if params.Tag != nil {
 		tag_id = uuid.MustParse(*params.Tag)
-		tag, err := h.Repo.GetTagItemsByID(ctx, tag_id)
+		tag, err := h.Repo.GetTagItemsByID(ctx.Request().Context(), tag_id)
 		if err != nil {
 			return ctx.JSON(http.StatusInternalServerError, err)
 		}
@@ -38,7 +38,7 @@ func (h *Handler) GetArticles(ctx echo.Context, params api.GetArticlesParams) er
 	}
 	if params.Category != nil {
 		category_id = uuid.MustParse(*params.Category)
-		category, err := h.Repo.GetCategoryNameByID(ctx, category_id)
+		category, err := h.Repo.GetCategoryNameByID(ctx.Request().Context(), category_id)
 		if err != nil {
 			return ctx.JSON(http.StatusInternalServerError, err)
 		}
@@ -53,7 +53,7 @@ func (h *Handler) GetArticles(ctx echo.Context, params api.GetArticlesParams) er
 		order = "asc"
 	}
 
-	articles, err := h.Repo.GetArticlesByCategoryTagSearch(ctx, &category_id, &tag_id, params.Search, &articlesLength, orderby, order)
+	articles, err := h.Repo.GetArticlesByCategoryTagSearch(ctx.Request().Context(), &category_id, &tag_id, params.Search, &articlesLength, orderby, order)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
@@ -100,7 +100,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 
 	// add category
 	categoryID := uuid.MustParse(req.Category)
-	category, err := h.Repo.AddCategoryID(ctx, categoryID)
+	category, err := h.Repo.AddCategoryID(ctx.Request().Context(), categoryID)
 	if err != nil {
 		logger.Println("AddCategoryID Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
@@ -117,7 +117,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 	// get tags name
 	for i, tag := range tags {
 		logger.Println("TagID: ", tag.ID)
-		tagName, err := h.Repo.GetTagItemsByID(ctx, tag.ID)
+		tagName, err := h.Repo.GetTagItemsByID(ctx.Request().Context(), tag.ID)
 		if err != nil {
 			logger.Println("GetTagNameByID Error: ", err)
 			return ctx.JSON(http.StatusInternalServerError, err)
@@ -155,7 +155,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 	// }
 
 	// adminのuserIdを取得し、usernameをreq.Authorに設定
-	users, err := h.Repo.GetAdminUsers(ctx)
+	users, err := h.Repo.GetAdminUsers(ctx.Request().Context())
 	userId := uuid.Nil
 	if err != nil {
 		if err.Error() != "sql: no rows in result set" {
@@ -164,7 +164,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 			return ctx.JSON(http.StatusInternalServerError, err)
 		} else {
 			// admin userが存在しない場合は新規作成
-			newUserId, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx, req.Author)
+			newUserId, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx.Request().Context(), ctx.RealIP(), req.Author)
 			if err != nil {
 				logger.Println("CheckIPAddressAndReturnUserID Error: ", err)
 				return ctx.JSON(http.StatusInternalServerError, err)
@@ -177,7 +177,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, "Multiple admin users found")
 	} else if len(users) == 0 {
 		// admin userが存在しない場合は新規作成
-		newUserId, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx, req.Author)
+		newUserId, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx.Request().Context(), ctx.RealIP(), req.Author)
 		if err != nil {
 			logger.Println("CheckIPAddressAndReturnUserID Error: ", err)
 			return ctx.JSON(http.StatusInternalServerError, err)
@@ -188,7 +188,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		adminUser := users[0]
 		if adminUser.Username.String != req.Author {
 			adminUser.Username.String = req.Author
-			err = h.Repo.UpdateUser(ctx, adminUser)
+			err = h.Repo.UpdateUser(ctx.Request().Context(), adminUser)
 			if err != nil {
 				logger.Println("UpdateUser Error: ", err)
 				return ctx.JSON(http.StatusInternalServerError, err)
@@ -208,17 +208,17 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		ViewCount:  sql.NullInt64{Int64: 0, Valid: true},
 	}
 
-	article, err := h.Repo.CreateArticle(ctx, newArticle)
+	article, err := h.Repo.CreateArticle(ctx.Request().Context(), newArticle)
 	if err != nil {
 		logger.Println("CreateArticle Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
-	err = h.Repo.AddTagPairsByArticle(ctx, articleId, tags)
+	err = h.Repo.AddTagPairsByArticle(ctx.Request().Context(), articleId, tags)
 	if err != nil {
 		logger.Println("AddTagPairsByArticle Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
-	authorName, err := h.Repo.GetUserNameById(ctx, userId)
+	authorName, err := h.Repo.GetUserNameById(ctx.Request().Context(), userId)
 	if err != nil {
 		logger.Println("GetUserNameById Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
@@ -228,13 +228,13 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		authorNameForThumbnail = "Luftalian"
 	}
 	idStr := article.ID.String()
-	imageUrl, imagePath, imageFileName, err := h.Config.HandleThumbnailGeneration(ctx, newArticle, tags, category.Name, authorName.Username.String)
+	imageUrl, imagePath, imageFileName, err := h.Config.HandleThumbnailGeneration(ctx.Request().Context(), newArticle, tags, category.Name, authorName.Username.String)
 	if err != nil {
 		logger.Println("HandleThumbnailGeneration Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 	if imageUrl != "" {
-		err = h.Repo.UpdateArticleImageURL(ctx, articleId, imageUrl)
+		err = h.Repo.UpdateArticleImageURL(ctx.Request().Context(), articleId, imageUrl)
 		if err != nil {
 			logger.Println("UpdateArticleImage Error: ", err)
 			return ctx.JSON(http.StatusInternalServerError, err)
@@ -258,7 +258,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 
 	{
 		limit := 5
-		articles, err := h.Repo.GetArticlesByCategoryTagSearch(ctx, &uuid.Nil, &uuid.Nil, nil, &limit, "created_at", "desc")
+		articles, err := h.Repo.GetArticlesByCategoryTagSearch(ctx.Request().Context(), &uuid.Nil, &uuid.Nil, nil, &limit, "created_at", "desc")
 		if err != nil {
 			// エラーログを出力
 			logger.Printf("Failed to fetch articles: %v", err)
@@ -276,7 +276,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		}
 
 		// RSSフィードの設定
-		err = h.Config.RSSmaker(ctx, articles)
+		err = h.Config.RSSmaker(ctx.Request().Context(), articles)
 		if err != nil {
 			logger.Printf("Failed to generate RSS feed: %v", err)
 			// return ctx.JSON(http.StatusInternalServerError, err)
@@ -294,7 +294,7 @@ func (h *Handler) DeleteArticlesId(ctx echo.Context, id string) error {
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
-	err = h.Repo.DeleteArticle(ctx, articleId)
+	err = h.Repo.DeleteArticle(ctx.Request().Context(), articleId)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
@@ -305,7 +305,7 @@ func (h *Handler) DeleteArticlesId(ctx echo.Context, id string) error {
 // (GET /articles/{id})
 func (h *Handler) GetArticlesId(ctx echo.Context, id string) error {
 	saveAnalysis := func(ctx echo.Context, articleId uuid.UUID, api string, isError bool) error {
-		err := h.Repo.CreateAnalysis(ctx, model.Analysis{
+		err := h.Repo.CreateAnalysis(ctx.Request().Context(), model.Analysis{
 			ID:         uuid.New(),
 			Timestamp:  time.Now(),
 			ArticleID:  articleId,
@@ -319,12 +319,12 @@ func (h *Handler) GetArticlesId(ctx echo.Context, id string) error {
 		}
 		if !isError {
 			logger.Println("SaveAnalysis Error: ")
-			err = h.Repo.SaveViewCount(ctx, articleId)
+			err = h.Repo.SaveViewCount(ctx.Request().Context(), articleId)
 			if err != nil {
 				return err
 			}
 			// get article view count
-			article, err := h.Repo.GetArticleByID(ctx, articleId)
+			article, err := h.Repo.GetArticleByID(ctx.Request().Context(), articleId)
 			if err != nil {
 				return err
 			}
@@ -338,7 +338,7 @@ func (h *Handler) GetArticlesId(ctx echo.Context, id string) error {
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
 
-	err = h.Repo.SaveViewCount(ctx, articleId)
+	err = h.Repo.SaveViewCount(ctx.Request().Context(), articleId)
 	if err != nil {
 		errSaveAnalysis := saveAnalysis(ctx, articleId, "GetArticlesId", true)
 		if errSaveAnalysis != nil {
@@ -347,7 +347,7 @@ func (h *Handler) GetArticlesId(ctx echo.Context, id string) error {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 
-	article, err := h.Repo.GetArticleByID(ctx, articleId)
+	article, err := h.Repo.GetArticleByID(ctx.Request().Context(), articleId)
 	if err != nil {
 		errSaveAnalysis := saveAnalysis(ctx, articleId, "GetArticlesId", true)
 		if errSaveAnalysis != nil {
@@ -385,7 +385,7 @@ func (h *Handler) PatchArticlesId(ctx echo.Context, id string) error {
 	}
 
 	// add category
-	categoryId, err := h.Repo.AddCategory(ctx, *req.Category)
+	categoryId, err := h.Repo.AddCategory(ctx.Request().Context(), *req.Category)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
@@ -397,12 +397,12 @@ func (h *Handler) PatchArticlesId(ctx echo.Context, id string) error {
 			ID: uuid.MustParse(tag),
 		})
 	}
-	err = h.Repo.AddTags(ctx, tags)
+	err = h.Repo.AddTags(ctx.Request().Context(), tags)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
 
-	article, err := h.Repo.UpdateArticle(ctx, model.Article{
+	article, err := h.Repo.UpdateArticle(ctx.Request().Context(), model.Article{
 		ID:         articleId,
 		Title:      *req.Title,
 		Content:    *req.Content,
@@ -425,11 +425,11 @@ func (h *Handler) GetArticlesArchive(ctx echo.Context) error {
 // Get articles by author
 // (GET /articles/author/{authorId})
 func (h *Handler) GetArticlesAuthorAuthorId(ctx echo.Context, authorId string) error {
-	author, err := h.Repo.GetUserNameById(ctx, uuid.MustParse(authorId))
+	author, err := h.Repo.GetUserNameById(ctx.Request().Context(), uuid.MustParse(authorId))
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
-	articles, err := h.Repo.GetArticlesByAuthor(ctx, uuid.MustParse(authorId), nil)
+	articles, err := h.Repo.GetArticlesByAuthor(ctx.Request().Context(), uuid.MustParse(authorId), nil)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}

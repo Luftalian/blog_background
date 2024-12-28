@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
@@ -34,6 +36,33 @@ func NewUploader(ImageUploadPath string, BaseURL string, MaxFileSize int64) *Con
 		BaseURL:         BaseURL,
 		MaxFileSize:     MaxFileSize,
 	}
+}
+
+func SetupFirstRss(repo *Repository, config *Configuration) error {
+	ctx := context.Background()
+	limit := 5
+
+	articles, err := repo.GetArticlesByCategoryTagSearch(ctx, &uuid.Nil, &uuid.Nil, nil, &limit, "created_at", "desc")
+	if err != nil {
+		logger.Printf("Failed to fetch articles: %v", err)
+		return err
+	}
+
+	sort.Slice(articles, func(i, j int) bool {
+		return articles[i].CreatedAt.After(articles[j].CreatedAt)
+	})
+
+	for i, article := range articles {
+		logger.Printf("Article %d: %s", i, article.Title)
+		logger.Printf("Article %d: %s", i, article.CreatedAt)
+	}
+
+	if err := config.RSSmaker(ctx, articles); err != nil {
+		logger.Printf("Failed to generate RSS feed: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 // SetupGoogleDrive - Google Driveサービスをセットアップし、ファイルをダウンロードする

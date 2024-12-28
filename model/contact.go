@@ -2,12 +2,11 @@ package model
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
-
-	"github.com/labstack/echo/v4"
 )
 
 var slackWebhookForContact string
@@ -38,7 +37,7 @@ func postToSlack(msg string) (err error) {
 	return nil
 }
 
-func SendSlack(ctx echo.Context, name, email, message string) error {
+func SendSlack(ctx context.Context, name, email, message string) error {
 	msg := "New contact message\n" +
 		"Name: " + name + "\n" +
 		"Email: " + email + "\n" +

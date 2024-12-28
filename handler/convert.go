@@ -34,7 +34,7 @@ func convertArticlesToAPIArticles(ctx echo.Context, articles []model.Article, re
 		id := article.ID.String()
 
 		if _, ok := authorNameIdMap[article.AuthorID]; !ok {
-			author, err := repo.GetUserNameById(ctx, article.AuthorID)
+			author, err := repo.GetUserNameById(ctx.Request().Context(), article.AuthorID)
 			if err != nil {
 				logger.Println("error getting author name", err)
 				return nil, err
@@ -44,7 +44,7 @@ func convertArticlesToAPIArticles(ctx echo.Context, articles []model.Article, re
 		author := authorNameIdMap[article.AuthorID]
 
 		if _, ok := catergoryNameIdMap[article.CategoryID]; !ok {
-			category, err := repo.GetCategoryNameByID(ctx, article.CategoryID)
+			category, err := repo.GetCategoryNameByID(ctx.Request().Context(), article.CategoryID)
 			if err != nil {
 				logger.Println("error getting category name", err)
 				return nil, err
@@ -57,7 +57,7 @@ func convertArticlesToAPIArticles(ctx echo.Context, articles []model.Article, re
 		}
 		category := catergoryNameIdMap[article.CategoryID]
 
-		tags, err := repo.GetTagsByArticle(ctx, article.ID, nil)
+		tags, err := repo.GetTagsByArticle(ctx.Request().Context(), article.ID, nil)
 		if err != nil {
 			logger.Println("error getting tags", err)
 			return nil, err
@@ -71,7 +71,7 @@ func convertArticlesToAPIArticles(ctx echo.Context, articles []model.Article, re
 			})
 		}
 
-		likeCount, err := repo.GetLikesCountByArticle(ctx, article.ID)
+		likeCount, err := repo.GetLikesCountByArticle(ctx.Request().Context(), article.ID)
 		if err != nil {
 			logger.Println("error getting like count", err)
 			return nil, err
