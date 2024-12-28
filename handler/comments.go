@@ -23,7 +23,7 @@ func (h *Handler) GetComments(ctx echo.Context, params api.GetCommentsParams) er
 	}
 	if len(comments) == 0 {
 		log.Println("No comments found")
-		return ctx.JSON(http.StatusNotFound, "No comments found")
+		return ctx.JSON(http.StatusOK, []model.Comment{})
 	}
 	return ctx.JSON(http.StatusOK, comments)
 }

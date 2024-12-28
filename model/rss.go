@@ -1,6 +1,7 @@
 package model
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -36,7 +37,7 @@ func (c *Configuration) RSSmaker(ctx echo.Context, articles []Article) error {
 	rss, err := feed.ToRss()
 	if err != nil {
 		// エラーログを出力
-		ctx.Logger().Errorf("Failed to generate RSS feed: %v", err)
+		log.Printf("Failed to generate RSS feed: %v", err)
 		return err
 	}
 
@@ -46,14 +47,14 @@ func (c *Configuration) RSSmaker(ctx echo.Context, articles []Article) error {
 	// ディレクトリが存在しない場合は作成
 	err = os.MkdirAll(filepath.Dir(rssFilePath), os.ModePerm)
 	if err != nil {
-		ctx.Logger().Errorf("Failed to create directory for rss.xml: %v", err)
+		log.Printf("Failed to create directory for rss.xml: %v", err)
 		return err
 	}
 
 	// rss.xmlファイルに書き込み
 	err = os.WriteFile(rssFilePath, []byte(rss), 0644)
 	if err != nil {
-		ctx.Logger().Errorf("Failed to write rss.xml: %v", err)
+		log.Printf("Failed to write rss.xml: %v", err)
 		return err
 	}
 

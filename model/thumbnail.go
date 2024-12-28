@@ -331,7 +331,7 @@ func WordWrapJapanese(text string, maxWidth float64, dc *gg.Context) []string {
 	return lines
 }
 
-func (c *Configuration) HandleThumbnailGeneration(ctx echo.Context, article Article, tags []TagItem, category string, authorName string) (string, error) {
+func (c *Configuration) HandleThumbnailGeneration(ctx echo.Context, article Article, tags []TagItem, category string, authorName string) (string, string, string, error) {
 	// 画像を保存するパスを生成
 	ext := ".png"
 	thumbnailFileName := uuid.New().String() + "_thumb" + ext
@@ -342,25 +342,25 @@ func (c *Configuration) HandleThumbnailGeneration(ctx echo.Context, article Arti
 		err = os.MkdirAll(c.ImageUploadPath, os.ModePerm)
 		if err != nil {
 			log.Println("Failed to create image upload directory:", err)
-			return "", err
+			return "", "", "", err
 		}
 	}
 
 	thumbnail, err := generateThumbnailNew(article, tags, category, authorName)
 	if err != nil {
 		log.Println("Failed to generate thumbnail:", err)
-		return "", err
+		return "", "", "", err
 	}
 
 	err = saveImage(thumbnail, thumbnailPath)
 	if err != nil {
 		log.Println("Failed to save thumbnail:", err)
-		return "", err
+		return "", "", "", err
 	}
 
 	thumbnailURL := fmt.Sprintf("%s/uploads/images/%s", strings.TrimRight(c.BaseURL, "/"), thumbnailFileName)
 
-	return thumbnailURL, nil
+	return thumbnailURL, thumbnailPath, thumbnailFileName, nil
 }
 
 func tagsToStringSlice(tags []TagItem) []string {

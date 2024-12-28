@@ -2,14 +2,12 @@ package handler
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
 	"blog-backend/api"
@@ -87,7 +85,7 @@ func (h *Handler) UploadImage(ctx echo.Context) error {
 	}
 
 	// 一意なファイル名を生成
-	newFileName := uuid.New().String() + ext
+	newFileName := model.GenerateUniqueFileName(ext)
 
 	// 画像保存先ディレクトリが存在しない場合は作成
 	if _, err := os.Stat(h.Config.ImageUploadPath); os.IsNotExist(err) {
@@ -104,26 +102,10 @@ func (h *Handler) UploadImage(ctx echo.Context) error {
 	dstPath := filepath.Join(h.Config.ImageUploadPath, newFileName)
 
 	// ファイルを保存（手動で保存する方法）
-	dst, err := os.Create(dstPath)
-	if err != nil {
+	if err := model.SaveImageToLocal(src, dstPath); err != nil {
 		log.Println("Failed to create file: ", err)
 		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
 			Message: "アップロードされた画像を保存できませんでした",
-			Code:    http.StatusInternalServerError,
-		})
-	}
-	defer dst.Close()
-
-	// ファイルをコピー
-	if _, err = src.Seek(0, 0); err != nil { // ファイルポインタを先頭に戻す
-		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
-			Message: "ファイルポインタをリセットできませんでした",
-			Code:    http.StatusInternalServerError,
-		})
-	}
-	if _, err = io.Copy(dst, src); err != nil {
-		return ctx.JSON(http.StatusInternalServerError, api.ErrorResponse{
-			Message: "アップロードされた画像を保存中にエラーが発生しました",
 			Code:    http.StatusInternalServerError,
 		})
 	}
@@ -132,7 +114,18 @@ func (h *Handler) UploadImage(ctx echo.Context) error {
 	imageURL := fmt.Sprintf("%s/uploads/images/%s", strings.TrimRight(h.Config.BaseURL, "/"), newFileName)
 
 	// レスポンスを返す
-	return ctx.JSON(http.StatusOK, api.ImageUploadResponse{
+	err = ctx.JSON(http.StatusOK, api.ImageUploadResponse{
 		Url: imageURL,
 	})
+	if err != nil {
+		log.Println("JSONレスポンスの送信に失敗しました: ", err)
+	}
+
+	// 非同期でGoogle Driveへアップロード
+	if h.DriveService != nil {
+		model.UploadAsyncToDrive(h.DriveService, dstPath, newFileName, os.Getenv("DRIVE_FOLDER_ID"))
+	} else {
+		log.Println("Drive service is not set")
+	}
+	return nil
 }

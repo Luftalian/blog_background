@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"os"
 	"sort"
 	"time"
 
@@ -227,7 +228,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		authorNameForThumbnail = "Luftalian"
 	}
 	idStr := article.ID.String()
-	imageUrl, err := h.Config.HandleThumbnailGeneration(ctx, newArticle, tags, category.Name, authorName.Username.String)
+	imageUrl, imagePath, imageFileName, err := h.Config.HandleThumbnailGeneration(ctx, newArticle, tags, category.Name, authorName.Username.String)
 	if err != nil {
 		log.Println("HandleThumbnailGeneration Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
@@ -240,12 +241,27 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		}
 	}
 
+	// レスポンスを返す
+	err = ctx.JSON(http.StatusCreated, api.Article{
+		Id: &idStr,
+	})
+	if err != nil {
+		log.Println("JSONレスポンスの送信に失敗しました: ", err)
+	}
+
+	// ここでDriveへアップロード
+	if h.DriveService != nil {
+		model.UploadAsyncToDrive(h.DriveService, imagePath, imageFileName, os.Getenv("DRIVE_FOLDER_ID"))
+	} else {
+		log.Println("Drive service is not set")
+	}
+
 	{
 		limit := 5
 		articles, err := h.Repo.GetArticlesByCategoryTagSearch(ctx, &uuid.Nil, &uuid.Nil, nil, &limit, "created_at", "desc")
 		if err != nil {
 			// エラーログを出力
-			ctx.Logger().Errorf("Failed to fetch articles: %v", err)
+			log.Printf("Failed to fetch articles: %v", err)
 			// return ctx.JSON(http.StatusInternalServerError, "Failed to fetch articles")
 		}
 
@@ -254,17 +270,20 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 			return articles[i].CreatedAt.After(articles[j].CreatedAt)
 		})
 
+		for i, article := range articles {
+			log.Printf("Article %d: %s", i, article.Title)
+			log.Printf("Article %d: %s", i, article.CreatedAt)
+		}
+
 		// RSSフィードの設定
 		err = h.Config.RSSmaker(ctx, articles)
 		if err != nil {
-			ctx.Logger().Errorf("Failed to generate RSS feed: %v", err)
+			log.Printf("Failed to generate RSS feed: %v", err)
 			// return ctx.JSON(http.StatusInternalServerError, err)
 		}
 	}
 
-	return ctx.JSON(http.StatusCreated, api.Article{
-		Id: &idStr,
-	})
+	return nil
 }
 
 // Delete an article

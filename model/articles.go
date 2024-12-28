@@ -93,6 +93,9 @@ func (repo *Repository) GetArticlesByDate(ctx echo.Context, start time.Time, end
 }
 
 func (repo *Repository) GetArticlesByCategoryTagSearch(ctx echo.Context, category_id *uuid.UUID, tag_id *uuid.UUID, search *string, limitNumber *int, orderby string, order string) ([]Article, error) {
+	if orderby != "created_at" {
+		return nil, fmt.Errorf("orderby must be created_at")
+	}
 	var articles []Article
 	fmt.Println(*limitNumber != 0)
 	fmt.Println(*category_id != uuid.Nil)
@@ -104,74 +107,74 @@ func (repo *Repository) GetArticlesByCategoryTagSearch(ctx echo.Context, categor
 		if *category_id != uuid.Nil && *tag_id != uuid.Nil && search != nil {
 			if order == "asc" {
 				log.Println("condition 1-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY ? ASC LIMIT ?", category_id, tag_id, "%"+*search+"%", "%"+*search+"%", orderby, limitNumber)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY created_at ASC LIMIT ?", category_id, tag_id, "%"+*search+"%", "%"+*search+"%", limitNumber)
 				return articles, err
 			}
 			log.Println("condition 1")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY ? DESC LIMIT ?", category_id, tag_id, "%"+*search+"%", "%"+*search+"%", orderby, limitNumber)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY created_at DESC LIMIT ?", category_id, tag_id, "%"+*search+"%", "%"+*search+"%", limitNumber)
 			return articles, err
 		} else if *category_id != uuid.Nil && *tag_id != uuid.Nil {
 			if order == "asc" {
 				log.Println("condition 2-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY ? ASC LIMIT ?", category_id, tag_id, orderby, limitNumber)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY created_at ASC LIMIT ?", category_id, tag_id, limitNumber)
 				return articles, err
 			}
 			log.Println("condition 2")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY ? DESC LIMIT ?", category_id, tag_id, orderby, limitNumber)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY created_at DESC LIMIT ?", category_id, tag_id, limitNumber)
 			return articles, err
 		} else if *category_id != uuid.Nil && search != nil {
 			if order == "asc" {
 				log.Println("condition 3-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND (title LIKE ? OR content LIKE ?) ORDER BY ? ASC LIMIT ?", category_id, "%"+*search+"%", "%"+*search+"%", orderby, limitNumber)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND (title LIKE ? OR content LIKE ?) ORDER BY created_at ASC LIMIT ?", category_id, "%"+*search+"%", "%"+*search+"%", limitNumber)
 				return articles, err
 			}
 			log.Println("condition 3")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND (title LIKE ? OR content LIKE ?) ORDER BY ? DESC LIMIT ?", category_id, "%"+*search+"%", "%"+*search+"%", orderby, limitNumber)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND (title LIKE ? OR content LIKE ?) ORDER BY created_at DESC LIMIT ?", category_id, "%"+*search+"%", "%"+*search+"%", limitNumber)
 			return articles, err
 		} else if *tag_id != uuid.Nil && search != nil {
 			if order == "asc" {
 				log.Println("condition 4-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY ? ASC LIMIT ?", tag_id, "%"+*search+"%", "%"+*search+"%", orderby, limitNumber)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY created_at ASC LIMIT ?", tag_id, "%"+*search+"%", "%"+*search+"%", limitNumber)
 				return articles, err
 			}
 			log.Println("condition 4")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY ? DESC LIMIT ?", tag_id, "%"+*search+"%", "%"+*search+"%", orderby, limitNumber)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY created_at DESC LIMIT ?", tag_id, "%"+*search+"%", "%"+*search+"%", limitNumber)
 			return articles, err
 		} else if *category_id != uuid.Nil {
 			if order == "asc" {
 				log.Println("condition 5-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? ORDER BY ? ASC LIMIT ?", category_id, orderby, limitNumber)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? ORDER BY created_at ASC LIMIT ?", category_id, limitNumber)
 				return articles, err
 			}
 			log.Println("condition 5")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? ORDER BY ? DESC LIMIT ?", category_id, orderby, limitNumber)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? ORDER BY created_at DESC LIMIT ?", category_id, limitNumber)
 			return articles, err
 		} else if *tag_id != uuid.Nil {
 			if order == "asc" {
 				log.Println("condition 6-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY ? ASC LIMIT ?", tag_id, orderby, limitNumber)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY created_at ASC LIMIT ?", tag_id, limitNumber)
 				return articles, err
 			}
 			log.Println("condition 6")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY ? DESC LIMIT ?", tag_id, orderby, limitNumber)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY created_at DESC LIMIT ?", tag_id, limitNumber)
 			return articles, err
 		} else if search != nil {
 			if order == "asc" {
 				log.Println("condition 7-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE title LIKE ? OR content LIKE ? ORDER BY ? ASC LIMIT ?", "%"+*search+"%", "%"+*search+"%", orderby, limitNumber)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE title LIKE ? OR content LIKE ? ORDER BY created_at ASC LIMIT ?", "%"+*search+"%", "%"+*search+"%", limitNumber)
 				return articles, err
 			}
 			log.Println("condition 7")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE title LIKE ? OR content LIKE ? ORDER BY ? DESC LIMIT ?", "%"+*search+"%", "%"+*search+"%", orderby, limitNumber)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE title LIKE ? OR content LIKE ? ORDER BY created_at DESC LIMIT ?", "%"+*search+"%", "%"+*search+"%", limitNumber)
 			return articles, err
 		} else {
 			if order == "asc" {
 				log.Println("condition 8-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles ORDER BY ? ASC LIMIT ?", orderby, limitNumber)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles ORDER BY created_at ASC LIMIT ?", limitNumber)
 				return articles, err
 			}
 			log.Println("condition 8")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles ORDER BY ? DESC LIMIT ?", orderby, limitNumber)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles ORDER BY created_at DESC LIMIT ?", limitNumber)
 			log.Println("err:", err)
 			return articles, err
 		}
@@ -179,78 +182,78 @@ func (repo *Repository) GetArticlesByCategoryTagSearch(ctx echo.Context, categor
 		if *category_id != uuid.Nil && *tag_id != uuid.Nil && search != nil {
 			if order == "asc" {
 				log.Println("condition 9-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY ? ASC", category_id, tag_id, "%"+*search+"%", "%"+*search+"%", orderby)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY created_at ASC", category_id, tag_id, "%"+*search+"%", "%"+*search+"%")
 				return articles, err
 			}
 			log.Println("condition 9")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY ? DESC", category_id, tag_id, "%"+*search+"%", "%"+*search+"%", orderby)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY created_at DESC", category_id, tag_id, "%"+*search+"%", "%"+*search+"%")
 			return articles, err
 		} else if *category_id != uuid.Nil && *tag_id != uuid.Nil {
 			if order == "asc" {
 				log.Println("condition 10-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY ? ASC", category_id, tag_id, orderby)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY created_at ASC", category_id, tag_id)
 				return articles, err
 			}
 			log.Println("condition 10")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY ? DESC", category_id, tag_id, orderby)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY created_at DESC", category_id, tag_id)
 			return articles, err
 		}
 		if *category_id != uuid.Nil && search != nil {
 			if order == "asc" {
 				log.Println("condition 11-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND (title LIKE ? OR content LIKE ?) ORDER BY ? ASC", category_id, "%"+*search+"%", "%"+*search+"%", orderby)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND (title LIKE ? OR content LIKE ?) ORDER BY created_at ASC", category_id, "%"+*search+"%", "%"+*search+"%")
 				return articles, err
 			}
 			log.Println("condition 11")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND (title LIKE ? OR content LIKE ?) ORDER BY ? DESC", category_id, "%"+*search+"%", "%"+*search+"%", orderby)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? AND (title LIKE ? OR content LIKE ?) ORDER BY created_at DESC", category_id, "%"+*search+"%", "%"+*search+"%")
 			return articles, err
 		}
 		if *tag_id != uuid.Nil && search != nil {
 			if order == "asc" {
 				log.Println("condition 12-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY ? ASC", tag_id, "%"+*search+"%", "%"+*search+"%", orderby)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY created_at ASC", tag_id, "%"+*search+"%", "%"+*search+"%")
 				return articles, err
 			}
 			log.Println("condition 12")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY ? DESC", tag_id, "%"+*search+"%", "%"+*search+"%", orderby)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) AND (title LIKE ? OR content LIKE ?) ORDER BY created_at DESC", tag_id, "%"+*search+"%", "%"+*search+"%")
 			return articles, err
 		}
 		if *category_id != uuid.Nil {
 			if order == "asc" {
 				log.Println("condition 13-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? ORDER BY ? ASC", category_id, orderby)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? ORDER BY created_at ASC", category_id)
 				return articles, err
 			}
 			log.Println("condition 13")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? ORDER BY ? DESC", category_id, orderby)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE category_id = ? ORDER BY created_at DESC", category_id)
 			return articles, err
 		}
 		if *tag_id != uuid.Nil {
 			if order == "asc" {
 				log.Println("condition 14-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY ? ASC", tag_id, orderby)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY created_at ASC", tag_id)
 				return articles, err
 			}
 			log.Println("condition 14")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY ? DESC", tag_id, orderby)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE id IN (SELECT article_id FROM article_tags WHERE tag_id = ?) ORDER BY created_at DESC", tag_id)
 			return articles, err
 		}
 		if search != nil {
 			if order == "asc" {
 				log.Println("condition 15-1")
-				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE title LIKE ? OR content LIKE ? ORDER BY ? ASC", "%"+*search+"%", "%"+*search+"%", orderby)
+				err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE title LIKE ? OR content LIKE ? ORDER BY created_at ASC", "%"+*search+"%", "%"+*search+"%")
 				return articles, err
 			}
 			log.Println("condition 15")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE title LIKE ? OR content LIKE ? ORDER BY ? DESC", "%"+*search+"%", "%"+*search+"%", orderby)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles WHERE title LIKE ? OR content LIKE ? ORDER BY created_at DESC", "%"+*search+"%", "%"+*search+"%")
 			return articles, err
 		}
 		if order == "asc" {
 			log.Println("condition 16-1")
-			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles ORDER BY ? ASC", orderby)
+			err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles ORDER BY created_at ASC")
 			return articles, err
 		}
-		err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles ORDER BY ? DESC", orderby)
+		err := repo.db.SelectContext(ctx.Request().Context(), &articles, "SELECT * FROM articles ORDER BY created_at DESC")
 		return articles, err
 	}
 }
