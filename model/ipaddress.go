@@ -33,7 +33,7 @@ func (repo *Repository) CheckIPAddressAndReturnUserID(ctx context.Context, ip st
 	return user.ID, nil
 }
 
-func (repo *Repository) CheckIPAddressAndReturnUserIDWithUserName(ctx context.Context, ip, username string) (uuid.UUID, error) {
+func (repo *Repository) CheckIPAddressAndReturnUserIDWithUserName(ctx context.Context, ip, username string, isAdmin bool) (uuid.UUID, error) {
 	logger.Println("ip address is", ip)
 	user, err := repo.GetUserByIpAddress(ctx, ip)
 	if err != nil && err.Error() != "sql: no rows in result set" {
@@ -57,7 +57,7 @@ func (repo *Repository) CheckIPAddressAndReturnUserIDWithUserName(ctx context.Co
 		IpAddress: sql.NullString{String: ip, Valid: true},
 		Username:  sql.NullString{String: username, Valid: true},
 		CreatedAt: time.Now(),
-		IsAdmin:   false,
+		IsAdmin:   isAdmin,
 	}
 	err = repo.CreateUser(ctx, newUser)
 	if err != nil {

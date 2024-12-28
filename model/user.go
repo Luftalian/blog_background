@@ -47,7 +47,7 @@ func (repo *Repository) CreateUser(ctx context.Context, user User) error {
 }
 
 func (repo *Repository) UpdateUser(ctx context.Context, user User) error {
-	_, err := repo.db.NamedExecContext(ctx, "UPDATE users SET email = :email, ipaddress = :ipaddress, username = :username, password_hash = :password_hash WHERE id = :id", user)
+	_, err := repo.db.NamedExecContext(ctx, "UPDATE users SET email = :email, ipaddress = :ipaddress, username = :username, password_hash = :password_hash, created_at = :created_at, is_admin = :is_admin WHERE id = :id", user)
 	return err
 }
 

@@ -164,7 +164,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 			return ctx.JSON(http.StatusInternalServerError, err)
 		} else {
 			// admin userが存在しない場合は新規作成
-			newUserId, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx.Request().Context(), ctx.RealIP(), req.Author)
+			newUserId, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx.Request().Context(), ctx.RealIP(), req.Author, true)
 			if err != nil {
 				logger.Println("CheckIPAddressAndReturnUserID Error: ", err)
 				return ctx.JSON(http.StatusInternalServerError, err)
@@ -177,7 +177,7 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		return ctx.JSON(http.StatusInternalServerError, "Multiple admin users found")
 	} else if len(users) == 0 {
 		// admin userが存在しない場合は新規作成
-		newUserId, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx.Request().Context(), ctx.RealIP(), req.Author)
+		newUserId, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx.Request().Context(), ctx.RealIP(), req.Author, true)
 		if err != nil {
 			logger.Println("CheckIPAddressAndReturnUserID Error: ", err)
 			return ctx.JSON(http.StatusInternalServerError, err)
@@ -230,6 +230,8 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		logger.Println("GetUserNameById Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
 	}
+	logger.Println("AuthorName: ", authorName.Username.String)
+	logger.Println("author: ", authorName)
 	authorNameForThumbnail := authorName.Username.String
 	if authorNameForThumbnail == "" {
 		authorNameForThumbnail = "Luftalian"
