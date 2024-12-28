@@ -187,8 +187,15 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		// admin userが1つの場合はそのuserIdを取得し、usernameをreq.Authorに設定
 		adminUser := users[0]
 		if adminUser.Username.String != req.Author {
-			adminUser.Username.String = req.Author
-			err = h.Repo.UpdateUser(ctx.Request().Context(), adminUser)
+			err = h.Repo.UpdateUser(ctx.Request().Context(), model.User{
+				ID:           adminUser.ID,
+				Email:        adminUser.Email,
+				IpAddress:    adminUser.IpAddress,
+				Username:     sql.NullString{String: req.Author, Valid: true},
+				PasswordHash: adminUser.PasswordHash,
+				CreatedAt:    adminUser.CreatedAt,
+				IsAdmin:      adminUser.IsAdmin,
+			})
 			if err != nil {
 				logger.Println("UpdateUser Error: ", err)
 				return ctx.JSON(http.StatusInternalServerError, err)
@@ -228,10 +235,10 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 		authorNameForThumbnail = "Luftalian"
 	}
 	//--------------------------------------------
-	authorNameForThumbnail = "Luftalian"
+	// authorNameForThumbnail = "Luftalian"
 	//--------------------------------------------
 	idStr := article.ID.String()
-	imageUrl, imagePath, imageFileName, err := h.Config.HandleThumbnailGeneration(ctx.Request().Context(), newArticle, tags, category.Name, authorName.Username.String)
+	imageUrl, imagePath, imageFileName, err := h.Config.HandleThumbnailGeneration(ctx.Request().Context(), newArticle, tags, category.Name, authorNameForThumbnail)
 	if err != nil {
 		logger.Println("HandleThumbnailGeneration Error: ", err)
 		return ctx.JSON(http.StatusInternalServerError, err)
