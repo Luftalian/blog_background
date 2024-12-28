@@ -227,6 +227,9 @@ func (h *Handler) PostArticles(ctx echo.Context) error {
 	if authorNameForThumbnail == "" {
 		authorNameForThumbnail = "Luftalian"
 	}
+	//--------------------------------------------
+	authorNameForThumbnail = "Luftalian"
+	//--------------------------------------------
 	idStr := article.ID.String()
 	imageUrl, imagePath, imageFileName, err := h.Config.HandleThumbnailGeneration(ctx.Request().Context(), newArticle, tags, category.Name, authorName.Username.String)
 	if err != nil {

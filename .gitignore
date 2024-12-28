@@ -10,3 +10,4 @@ fonts/
 credentials.json
 token.json
 service-account.json
+rss_test.py
