@@ -41,7 +41,7 @@ func (h *Handler) PostComments(ctx echo.Context) error {
 	if req.UserId != nil {
 		userId = uuid.MustParse(*req.UserId)
 	} else {
-		userIdFromDB, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx.Request().Context(), ctx.RealIP(), req.Username, false)
+		userIdFromDB, err := h.Repo.CheckIPAddressAndReturnUserIDWithUserName(ctx.Request().Context(), ctx.RealIP(), req.Username)
 		if err != nil {
 			logger.Println("CheckIPAddressAndReturnUserIDWithUserName Error: ", err)
 			return ctx.JSON(http.StatusInternalServerError, err)
