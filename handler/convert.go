@@ -5,6 +5,7 @@ import (
 	"blog-backend/logger"
 	"blog-backend/model"
 	"database/sql"
+	"sort"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -95,5 +96,9 @@ func convertArticlesToAPIArticles(ctx echo.Context, articles []model.Article, re
 			UpdatedAt: &article.UpdatedAt,
 		})
 	}
+	// CreatedAtの降順にソート
+	sort.Slice(returnArticles, func(i, j int) bool {
+		return returnArticles[i].CreatedAt.After(*returnArticles[j].CreatedAt)
+	})
 	return returnArticles, nil
 }
