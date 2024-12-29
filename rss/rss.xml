@@ -4,46 +4,6 @@
     <link>http://localhost:5173</link>
     <description>This is my personal blog</description>
     <managingEditor>example@example.example (Haruki Nakajima)</managingEditor>
-    <pubDate>Sat, 28 Dec 2024 16:26:30 +0000</pubDate>
-    <item>
-      <title>あいう</title>
-      <link>http://localhost:5173/article/aa1a2799-718a-4ea4-a9fa-0c5f29ca71da</link>
-      <description>あいう</description>
-      <author>Haruki Nakajima</author>
-      <guid>aa1a2799-718a-4ea4-a9fa-0c5f29ca71da</guid>
-      <pubDate>Sat, 28 Dec 2024 16:26:24 +0000</pubDate>
-    </item>
-    <item>
-      <title>asdfas</title>
-      <link>http://localhost:5173/article/b805d72b-9211-43e6-b515-cf822c55adf9</link>
-      <description>asdf</description>
-      <author>Haruki Nakajima</author>
-      <guid>b805d72b-9211-43e6-b515-cf822c55adf9</guid>
-      <pubDate>Sat, 28 Dec 2024 16:24:02 +0000</pubDate>
-    </item>
-    <item>
-      <title>asfasdf</title>
-      <link>http://localhost:5173/article/3b05ae3f-74c1-4365-b727-ae76c5e40422</link>
-      <description>asdfasdf</description>
-      <author>Haruki Nakajima</author>
-      <guid>3b05ae3f-74c1-4365-b727-ae76c5e40422</guid>
-      <pubDate>Sat, 28 Dec 2024 16:12:33 +0000</pubDate>
-    </item>
-    <item>
-      <title>asf</title>
-      <link>http://localhost:5173/article/f278208a-21c1-4a90-862a-7f5a7958e38f</link>
-      <description>asf</description>
-      <author>Haruki Nakajima</author>
-      <guid>f278208a-21c1-4a90-862a-7f5a7958e38f</guid>
-      <pubDate>Sat, 28 Dec 2024 16:11:45 +0000</pubDate>
-    </item>
-    <item>
-      <title>adf</title>
-      <link>http://localhost:5173/article/16898229-0eeb-46c7-9348-65ced71cbae8</link>
-      <description>asfd</description>
-      <author>Haruki Nakajima</author>
-      <guid>16898229-0eeb-46c7-9348-65ced71cbae8</guid>
-      <pubDate>Sat, 28 Dec 2024 16:06:16 +0000</pubDate>
-    </item>
+    <pubDate>Sun, 29 Dec 2024 05:26:37 +0000</pubDate>
   </channel>
 </rss>
